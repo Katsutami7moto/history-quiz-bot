@@ -13,8 +13,10 @@ logger = logging.getLogger(__name__)
 
 
 def start(update: Update, context: CallbackContext):
-    quiz_buttons = [['Новый вопрос', 'Сдаться'], 
-                    ['Мой счёт']]
+    quiz_buttons = [
+        ['Новый вопрос', 'Сдаться'], 
+        ['Мой счёт']
+    ]
     reply_markup = ReplyKeyboardMarkup(quiz_buttons)
     update.message.reply_text(
         'Привет! Я бот для викторин',
@@ -26,9 +28,30 @@ def send_new_question(update: Update, context: CallbackContext):
     question = get_random_question(
         context.bot_data.get('questions_dir')
     )
+    context.bot_data.update(
+        {
+            'current_question': question[0],
+            'current_answer': question[1],
+        }
+    )
     db_connection: Redis = context.bot_data.get('db_connection')
     db_connection.set(update.effective_user.id, question[0])
     update.message.reply_text(db_connection.get(update.effective_user.id))
+
+
+def handle_answer(update: Update, context: CallbackContext, answer: str):
+    current_answer: str = context.bot_data.get('current_answer')
+    if answer == current_answer.split('.')[0].split('(')[0]:
+        msg = 'Правильно! Для следующего вопроса нажми «Новый вопрос»'
+        context.bot_data.update(
+        {
+            'current_question': '',
+            'current_answer': '',
+        }
+    )
+    else:
+        msg = 'Неправильно… Попробуешь ещё раз?'
+    update.message.reply_text(msg)
 
 
 def handle_giving_up(update: Update, context: CallbackContext):
@@ -46,9 +69,12 @@ def handle_menu_actions(update: Update, context: CallbackContext):
         'Мой счёт': show_user_score,
     }
     action_text = update.message.text
+
     if action_text in menu_actions:
         action = menu_actions[action_text]
         action(update, context)
+    elif context.bot_data.get('current_question'):
+        handle_answer(update, context, action_text)
     else:
         context.bot.send_message(
             chat_id=update.effective_chat.id,
@@ -62,7 +88,7 @@ def main():
     bot_token = env('TELEGRAM_BOT_TOKEN')
     questions_dir = env('QUESTIONS_DIR')
     db_address = env('DB_ADDRESS')
-    db_port = env('DB_PORT')
+    db_port = env.int('DB_PORT')
     db_username = env('DB_USERNAME')
     db_password = env('DB_PASSWORD')
 
@@ -91,6 +117,8 @@ def main():
         {
             'questions_dir': questions_dir,
             'db_connection': db_connection,
+            'current_question': '',
+            'current_answer': '',
         }
     )
     dispatcher.add_handler(CommandHandler('start', start))
