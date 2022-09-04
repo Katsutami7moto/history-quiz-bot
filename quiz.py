@@ -1,3 +1,6 @@
+import random
+import os
+
 def check_only_quiz(text: str) -> bool:
     is_question = 'Вопрос' in text
     is_answer = 'Ответ' in text
@@ -19,3 +22,15 @@ def get_structured_quiz(filename: str) -> dict:
     questions = tuple(map(get_question, qna[::2]))
     answers = tuple(map(get_answer, qna[1::2]))
     return dict(zip(questions, answers))
+
+
+def get_random_questions_file(dirname: str) -> str:
+    for root, _, files in os.walk(dirname):
+        return os.path.join(root, random.choice(files))
+
+
+def get_random_question(dirname: str) -> tuple:
+    structured_quiz = get_structured_quiz(
+        get_random_questions_file(dirname)
+    )
+    return random.choice(tuple(structured_quiz.items()))
