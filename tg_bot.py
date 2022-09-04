@@ -1,6 +1,7 @@
 import logging
 
 from environs import Env
+from redis import Redis
 from telegram import Update, ReplyKeyboardMarkup
 from telegram.ext import (
     Updater, CommandHandler, MessageHandler, Filters, CallbackContext
@@ -25,7 +26,9 @@ def send_new_question(update: Update, context: CallbackContext):
     question = get_random_question(
         context.bot_data.get('questions_dir')
     )
-    update.message.reply_text(question[0])
+    db_connection: Redis = context.bot_data.get('db_connection')
+    db_connection.set(update.effective_user.id, question[0])
+    update.message.reply_text(db_connection.get(update.effective_user.id))
 
 
 def handle_giving_up(update: Update, context: CallbackContext):
@@ -58,6 +61,10 @@ def main():
     env.read_env()
     bot_token = env('TELEGRAM_BOT_TOKEN')
     questions_dir = env('QUESTIONS_DIR')
+    db_address = env('DB_ADDRESS')
+    db_port = env('DB_PORT')
+    db_username = env('DB_USERNAME')
+    db_password = env('DB_PASSWORD')
 
     logging.basicConfig(
         format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
@@ -65,11 +72,25 @@ def main():
     )
     logger.setLevel(logging.INFO)
 
+    db_connection = Redis(
+        host=db_address,
+        port=db_port,
+        username=db_username,
+        password=db_password,
+        decode_responses=True
+    )
+
+    if db_connection.ping():
+        logger.info('Redis DB is connected.')
+    else:
+        logger.warn('Redis DB is not connected')
+
     updater = Updater(bot_token)
     dispatcher = updater.dispatcher
     dispatcher.bot_data.update(
         {
             'questions_dir': questions_dir,
+            'db_connection': db_connection,
         }
     )
     dispatcher.add_handler(CommandHandler('start', start))
