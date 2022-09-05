@@ -1,6 +1,7 @@
 import random
 import os
 
+
 def check_only_quiz(text: str) -> bool:
     is_question = 'Вопрос' in text
     is_answer = 'Ответ' in text
