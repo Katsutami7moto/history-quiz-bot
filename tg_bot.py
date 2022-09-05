@@ -61,7 +61,10 @@ def handle_answer(update: Update, context: CallbackContext):
 
 
 def handle_giving_up(update: Update, context: CallbackContext):
-    pass
+    current_answer: str = context.bot_data.get('current_answer')
+    update.message.reply_text(f'Правильный ответ:\n{current_answer}')
+    
+    return CHOOSING
 
 
 def show_user_score(update: Update, context: CallbackContext):
