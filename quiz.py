@@ -3,9 +3,7 @@ import os
 
 
 def check_only_quiz(text: str) -> bool:
-    is_question = 'Вопрос' in text
-    is_answer = 'Ответ' in text
-    return is_question or is_answer
+    return 'Вопрос' in text or 'Ответ' in text
 
 
 def get_question(text: str) -> str:
