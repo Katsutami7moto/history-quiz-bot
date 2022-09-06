@@ -67,7 +67,12 @@ def handle_giving_up(update: Update, context: CallbackContext):
 
 
 def show_user_score(update: Update, context: CallbackContext):
-    pass
+    context.bot.send_message(
+        chat_id=update.effective_chat.id,
+        text='Ведение счёта в разработке'
+    )
+
+    return CHOOSING
 
 
 def handle_wrong_command(update: Update, context: CallbackContext):
