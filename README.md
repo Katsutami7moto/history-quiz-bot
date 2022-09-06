@@ -59,16 +59,22 @@ python3 vk_bot.py
 1. Fork this repository.
 2. Sign up at [Heroku](https://id.heroku.com/login).
 3. Create [an app](https://dashboard.heroku.com/new-app) at Heroku; choose `Europe` region.
-4. [Connect](https://dashboard.heroku.com/apps/{your-heroku-app-name}/deploy/github) forked GitHub repository.
-5. Go to [Settings](https://dashboard.heroku.com/apps/{your-heroku-app-name}/settings) and set `Config Vars` from previously described environment variables, putting each name to `KEY` and value to `VALUE`, e.g. `TELEGRAM_BOT_TOKEN` to `KEY` and `{telegram_token}` (here it should be without `' '` quotation marks) to `VALUE`.
-6. Go to [Deploy](https://dashboard.heroku.com/apps/{your-heroku-app-name}/deploy/github) section, scroll to bottom, to `Manual Deploy`, be sure to choose `main` branch and click `Deploy Branch` button.
-7. Bot should start working, but just in case check the [logs](https://dashboard.heroku.com/apps/{your-heroku-app-name}/logs) of the app. At the end it should look something like this:
+4. Links in the next points have `{your-heroku-app-name}`; replace it with name of your Heroku app.
+5. [Connect](https://dashboard.heroku.com/apps/{your-heroku-app-name}/deploy/github) forked GitHub repository.
+6. Go to [Settings](https://dashboard.heroku.com/apps/{your-heroku-app-name}/settings) and set `Config Vars` from previously described environment variables, putting each name to `KEY` and value to `VALUE`, e.g. `TELEGRAM_BOT_TOKEN` to `KEY` and `{telegram_token}` (here it should be without `' '` quotation marks) to `VALUE`.
+7. Go to [Deploy](https://dashboard.heroku.com/apps/{your-heroku-app-name}/deploy/github) section, scroll to bottom, to `Manual Deploy`, be sure to choose `main` branch and click `Deploy Branch` button.
+8. Bot should start working, but just in case check the [logs](https://dashboard.heroku.com/apps/{your-heroku-app-name}/logs) of the app. At the end it should look something like this:
 ```
-2022-07-25T12:52:42.000000+00:00 app[api]: Build succeeded
-2022-07-25T12:52:42.153483+00:00 heroku[bot.1]: Stopping all processes with SIGTERM
-2022-07-25T12:52:42.338522+00:00 heroku[bot.1]: Process exited with status 143
-2022-07-25T12:52:42.793206+00:00 heroku[bot.1]: Starting process with command `python3 main.py`
-2022-07-25T12:52:43.389877+00:00 heroku[bot.1]: State changed from starting to up
+2022-09-06T15:00:24.719540+00:00 heroku[tg-bot.1]: Starting process with command `python3 tg_bot.py`
+2022-09-06T15:00:25.090598+00:00 app[api]: Scaled to tg-bot@1:Free vk-bot@1:Free by user nclsf87@gmail.com
+2022-09-06T15:00:25.304163+00:00 heroku[tg-bot.1]: State changed from starting to up
+2022-09-06T15:00:26.461360+00:00 app[tg-bot.1]: 2022-09-06 15:00:26,461 - __main__ - INFO - Redis DB is connected.
+2022-09-06T15:00:26.463031+00:00 app[tg-bot.1]: 2022-09-06 15:00:26,462 - __main__ - INFO - Bot is running.
+2022-09-06T15:00:26.463186+00:00 app[tg-bot.1]: 2022-09-06 15:00:26,463 - apscheduler.scheduler - INFO - Scheduler started
+2022-09-06T15:00:27.299879+00:00 heroku[vk-bot.1]: Starting process with command `python3 vk_bot.py`
+2022-09-06T15:00:28.158273+00:00 heroku[vk-bot.1]: State changed from starting to up
+2022-09-06T15:00:29.096080+00:00 app[vk-bot.1]: 2022-09-06 15:00:29,095 - __main__ - INFO - Redis DB is connected.
+2022-09-06T15:00:29.377261+00:00 app[vk-bot.1]: 2022-09-06 15:00:29,377 - __main__ - INFO - Bot is running.
 ```
 
 ### Working examples
