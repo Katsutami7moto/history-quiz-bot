@@ -1,35 +1,28 @@
-import random
 import os
 
 
-def check_only_quiz(text: str) -> bool:
-    return 'Вопрос' in text or 'Ответ' in text
-
-
-def get_question(text: str) -> str:
-    return '\n'.join([x for x in text.split('\n') if x][1:])
-
-
-def get_answer(text: str) -> str:
-    return '\n'.join(text.split('\n')[1:])
-
-
-def get_structured_quiz(filename: str) -> dict:
-    with open(file=filename, mode='r', encoding='koi8-r') as file:
-        file_contents = file.read()
-    qna = tuple(filter(check_only_quiz, file_contents.split('\n\n')))
-    questions = tuple(map(get_question, qna[::2]))
-    answers = tuple(map(get_answer, qna[1::2]))
-    return dict(zip(questions, answers))
-
-
-def get_random_questions_file(dirname: str) -> str:
+def get_quiz(dirname: str) -> dict:
+    quiz = dict()
     for root, _, files in os.walk(dirname):
-        return os.path.join(root, random.choice(files))
-
-
-def get_random_question(dirname: str) -> tuple:
-    structured_quiz = get_structured_quiz(
-        get_random_questions_file(dirname)
-    )
-    return random.choice(tuple(structured_quiz.items()))
+        for file in files:
+            with open(
+                file=os.path.join(root, file),
+                mode='r',
+                encoding='koi8-r'
+            ) as file:
+                file_contents = file.read()
+            qna = tuple(
+                text
+                for text in file_contents.split('\n\n')
+                if 'Вопрос' in text or 'Ответ' in text
+            )
+            questions = tuple(
+                '\n'.join([x for x in text.split('\n') if x][1:])
+                for text in qna[::2]
+            )
+            answers = tuple(
+                '\n'.join(text.split('\n')[1:])
+                for text in qna[1::2]
+            )
+            quiz.update(dict(zip(questions, answers)))
+    return quiz

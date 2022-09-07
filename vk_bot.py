@@ -1,30 +1,22 @@
 import logging
+import random
 from time import sleep
 
+import redis.exceptions
 from environs import Env
 from redis import Redis
-import redis.exceptions
 from vk_api import VkApi
 from vk_api.keyboard import VkKeyboard, VkKeyboardColor
 from vk_api.longpoll import VkEventType, VkLongPoll
 from vk_api.utils import get_random_id
 
-from quiz import get_random_question
+from quiz import get_quiz
 
 logger = logging.getLogger(__name__)
 
 
-def send_message(vk, uid, text, _keyboard):
-    vk.messages.send(
-        peer_id=uid,
-        message=text,
-        random_id=get_random_id(),
-        keyboard=_keyboard
-    )
-
-
-def send_new_question(uid, db_connection: Redis, questions_dir):
-    question, answer = get_random_question(questions_dir)
+def send_new_question(uid, db_connection: Redis, _quiz):
+    question, answer = random.choice(tuple(_quiz.items()))
     db_connection.set(f'{uid}_current_question', question)
     db_connection.set(f'{uid}_current_answer', answer)
     return question
@@ -53,11 +45,11 @@ def show_user_score():
     return 'Ведение счёта в разработке'
 
 
-def get_message(uid, request, db_connection: Redis, questions_dir):
+def get_message(uid, request, db_connection: Redis, _quiz):
     current_question = db_connection.get(f'{uid}_current_question')
 
     if request == 'Новый вопрос':
-        return send_new_question(uid, db_connection, questions_dir)
+        return send_new_question(uid, db_connection, _quiz)
     if request == 'Сдаться':
         return handle_giving_up(uid, db_connection)
     if request == 'Мой счёт':
@@ -104,26 +96,33 @@ def main():
             logger.warn('Reconnecting in 10 seconds')
             sleep(10)
 
-    vk_session = VkApi(token=vk_club_token)
-    vk = vk_session.get_api()
-    longpoll = VkLongPoll(vk_session)
-
-    logger.info('Bot is running.')
-
     keyboard = VkKeyboard()
     keyboard.add_button('Новый вопрос', color=VkKeyboardColor.PRIMARY)
     keyboard.add_button('Сдаться', color=VkKeyboardColor.NEGATIVE)
     keyboard.add_line()
     keyboard.add_button('Мой счёт', color=VkKeyboardColor.SECONDARY)
 
+    _quiz = get_quiz(questions_dir)
+
+    vk_session = VkApi(token=vk_club_token)
+    vk = vk_session.get_api()
+    longpoll = VkLongPoll(vk_session)
+
+    logger.info('Bot is running.')
+
     for event in longpoll.listen():
         if event.type == VkEventType.MESSAGE_NEW and event.to_me:
             uid = event.user_id
             request = event.text
-            message = get_message(
-                uid, request, db_connection, questions_dir
+            _message = get_message(
+                uid, request, db_connection, _quiz
             )
-            send_message(vk, uid, message, keyboard.get_keyboard())
+            vk.messages.send(
+                peer_id=uid,
+                message=_message,
+                random_id=get_random_id(),
+                keyboard=keyboard.get_keyboard()
+            )
 
 
 if __name__ == '__main__':

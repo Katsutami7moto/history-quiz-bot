@@ -1,16 +1,17 @@
 import logging
+import random
 from time import sleep
 
+import redis.exceptions
 from environs import Env
 from redis import Redis
-import redis.exceptions
-from telegram import Update, ReplyKeyboardMarkup
+from telegram import ReplyKeyboardMarkup, Update
 from telegram.ext import (
-    Updater, CommandHandler, MessageHandler, Filters, CallbackContext,
-    ConversationHandler
+    CallbackContext, CommandHandler, ConversationHandler,
+    Filters, MessageHandler, Updater
 )
 
-from quiz import get_random_question
+from quiz import get_quiz
 
 logger = logging.getLogger(__name__)
 
@@ -27,9 +28,8 @@ def start(update: Update, context: CallbackContext):
 
 
 def send_new_question(update: Update, context: CallbackContext):
-    question, answer = get_random_question(
-        context.bot_data.get('questions_dir')
-    )
+    _quiz = context.bot_data.get('_quiz')
+    question, answer = random.choice(tuple(_quiz.items()))
     uid = update.effective_user.id
     db_connection: Redis = context.bot_data.get('db_connection')
     db_connection.set(f'{uid}_current_question', question)
@@ -62,9 +62,9 @@ def handle_giving_up(update: Update, context: CallbackContext):
     uid = update.effective_user.id
     db_connection: Redis = context.bot_data.get('db_connection')
     current_answer: str = db_connection.get(f'{uid}_current_answer')
-    
+
     update.message.reply_text(f'Правильный ответ:\n{current_answer}')
-    
+
     return CHOOSING
 
 
@@ -128,11 +128,13 @@ def main():
         ['Мой счёт']
     ])
 
+    _quiz = get_quiz(questions_dir)
+
     updater = Updater(bot_token)
     dispatcher = updater.dispatcher
     dispatcher.bot_data.update(
         {
-            'questions_dir': questions_dir,
+            '_quiz': _quiz,
             'db_connection': db_connection,
             'quiz_buttons': quiz_buttons,
         }
