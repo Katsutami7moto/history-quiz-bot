@@ -1,7 +1,9 @@
 import logging
+from time import sleep
 
 from environs import Env
 from redis import Redis
+import redis.exceptions
 from telegram import Update, ReplyKeyboardMarkup
 from telegram.ext import (
     Updater, CommandHandler, MessageHandler, Filters, CallbackContext,
@@ -108,10 +110,18 @@ def main():
         decode_responses=True
     )
 
-    if db_connection.ping():
-        logger.info('Redis DB is connected.')
-    else:
-        logger.warn('Redis DB is not connected')
+    while True:
+        try:
+            if db_connection.ping():
+                logger.info('Redis DB is connected.')
+                break
+            else:
+                raise redis.exceptions.ConnectionError(
+                    'Redis DB is not connected.'
+                )
+        except redis.exceptions.ConnectionError:
+            logger.warn('Reconnecting in 10 seconds')
+            sleep(10)
 
     quiz_buttons = ReplyKeyboardMarkup([
         ['Новый вопрос', 'Сдаться'],

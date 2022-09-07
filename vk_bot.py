@@ -1,8 +1,10 @@
 import logging
+from time import sleep
 
-import vk_api
 from environs import Env
 from redis import Redis
+import redis.exceptions
+from vk_api import VkApi
 from vk_api.keyboard import VkKeyboard, VkKeyboardColor
 from vk_api.longpoll import VkEventType, VkLongPoll
 from vk_api.utils import get_random_id
@@ -89,12 +91,20 @@ def main():
         decode_responses=True
     )
 
-    if db_connection.ping():
-        logger.info('Redis DB is connected.')
-    else:
-        logger.warn('Redis DB is not connected')
+    while True:
+        try:
+            if db_connection.ping():
+                logger.info('Redis DB is connected.')
+                break
+            else:
+                raise redis.exceptions.ConnectionError(
+                    'Redis DB is not connected.'
+                )
+        except redis.exceptions.ConnectionError:
+            logger.warn('Reconnecting in 10 seconds')
+            sleep(10)
 
-    vk_session = vk_api.VkApi(token=vk_club_token)
+    vk_session = VkApi(token=vk_club_token)
     vk = vk_session.get_api()
     longpoll = VkLongPoll(vk_session)
 
