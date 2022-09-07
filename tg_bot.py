@@ -1,8 +1,6 @@
 import logging
 import random
-from time import sleep
 
-import redis.exceptions
 from environs import Env
 from redis import Redis
 from telegram import ReplyKeyboardMarkup, Update
@@ -110,18 +108,11 @@ def main():
         decode_responses=True
     )
 
-    while True:
-        try:
-            if db_connection.ping():
-                logger.info('Redis DB is connected.')
-                break
-            else:
-                raise redis.exceptions.ConnectionError(
-                    'Redis DB is not connected.'
-                )
-        except redis.exceptions.ConnectionError:
-            logger.warn('Reconnecting in 10 seconds')
-            sleep(10)
+    if db_connection.ping():
+        logger.info('Redis DB is connected.')
+    else:
+        logger.error('Redis DB is not connected.')
+        exit(1)
 
     quiz_buttons = ReplyKeyboardMarkup([
         ['Новый вопрос', 'Сдаться'],
