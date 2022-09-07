@@ -27,14 +27,14 @@ def start(update: Update, context: CallbackContext):
 
 
 def send_new_question(update: Update, context: CallbackContext):
-    question = get_random_question(
+    question, answer = get_random_question(
         context.bot_data.get('questions_dir')
     )
     uid = update.effective_user.id
     db_connection: Redis = context.bot_data.get('db_connection')
-    db_connection.set(f'{uid}_current_question', question[0])
-    db_connection.set(f'{uid}_current_answer', question[1])
-    update.message.reply_text(db_connection.get(f'{uid}_current_question'))
+    db_connection.set(f'{uid}_current_question', question)
+    db_connection.set(f'{uid}_current_answer', answer)
+    update.message.reply_text(question)
 
     return ANSWERING
 

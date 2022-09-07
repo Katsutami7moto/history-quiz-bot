@@ -24,10 +24,10 @@ def send_message(vk, uid, text, _keyboard):
 
 
 def send_new_question(uid, db_connection: Redis, questions_dir):
-    question = get_random_question(questions_dir)
-    db_connection.set(f'{uid}_current_question', question[0])
-    db_connection.set(f'{uid}_current_answer', question[1])
-    return db_connection.get(f'{uid}_current_question')
+    question, answer = get_random_question(questions_dir)
+    db_connection.set(f'{uid}_current_question', question)
+    db_connection.set(f'{uid}_current_answer', answer)
+    return question
 
 
 def handle_answer(uid, db_connection: Redis, attempt):
